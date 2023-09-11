@@ -7,7 +7,7 @@ namespace Lab1._1
         static void Main(string[] args)
         {
 
-            Random random1 = new Random(1234);
+            Random random1 = new Random(12378);
 
             for (int i = 0; i < 10; i++)
             {
