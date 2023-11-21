@@ -45,6 +45,6 @@ class Program
         // Зберігаємо результат дешифрування у файл "brute_force_decrypted.txt"
         File.WriteAllBytes("brute_force_decrypted.txt", bruteForceDecryptedData);
 
-        Console.WriteLine("Знайдено правильний ключ (методом перебору): " + Encoding.UTF8.GetString(key1));
+        Console.WriteLine("Знайдено правильний ключ (методом перебору) можете переглянути результат ");
     }
 }
