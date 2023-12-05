@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Text;
+using System.Security.Cryptography;
 
 class Program
 {
@@ -9,10 +9,8 @@ class Program
         // Зчитування вмісту файлу "input.txt"
         byte[] fileData = File.ReadAllBytes("input.txt");
 
-        // Генерування ключа (ключ повинен бути випадковим та тієї ж довжини, що і файл)
-        Random random = new Random();
-        byte[] key = new byte[fileData.Length];
-        random.NextBytes(key);
+        // Генерація криптографічно стійкого ключа та зберігання його у файлі
+        byte[] key = GenerateCryptographicallySecureKey(fileData.Length, "key.bin");
 
         // Шифрування даних і запис зашифрованих даних у файл "encrypted.dat"
         byte[] encryptedData = new byte[fileData.Length];
@@ -30,21 +28,20 @@ class Program
         }
         File.WriteAllBytes("decrypted.txt", decryptedData);
 
-        // Зчитування зашифрованого файлу "encrypted.dat"
-        byte[] encryptedData1 = File.ReadAllBytes("encrypted.dat");
+        Console.WriteLine("Знайдено правильний ключ. Результат збережено в decrypted.txt");
+    }
 
-        // Шукаємо правильний ключ методом перебору
-        byte[] bruteForceDecryptedData = new byte[encryptedData1.Length];
-        byte[] key1 = Encoding.UTF8.GetBytes("Mit21"); // Апріорна інформація про ключ
-
-        for (int i = 0; i < encryptedData1.Length; i++)
+    static byte[] GenerateCryptographicallySecureKey(int length, string keyFilePath)
+    {
+        using (var random = new RNGCryptoServiceProvider())
         {
-            bruteForceDecryptedData[i] = (byte)(encryptedData1[i] ^ key[i % key.Length]);
+            byte[] key = new byte[length];
+            random.GetBytes(key);
+
+            // Збереження ключа у файлі
+            File.WriteAllBytes(keyFilePath, key);
+
+            return key;
         }
-
-        // Зберігаємо результат дешифрування у файл "brute_force_decrypted.txt"
-        File.WriteAllBytes("brute_force_decrypted.txt", bruteForceDecryptedData);
-
-        Console.WriteLine("Знайдено правильний ключ (методом перебору) можете переглянути результат ");
     }
 }
