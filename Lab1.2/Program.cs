@@ -2,21 +2,29 @@
 
 namespace Lab1._2
 {
-    internal class Program
+    class Program
     {
         static void Main(string[] args)
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 20; i++)
             {
-                var rndNumberGenerator = new RNGCryptoServiceProvider();
-                var randomNumber = new byte[32];
-                rndNumberGenerator.GetBytes(randomNumber);
-                var ConvertedResult = Convert.ToBase64String(randomNumber);
-
-                Console.WriteLine(ConvertedResult);
+                string randomNumber = Convert.ToBase64String(RandomGenerator.GenerateRandomNumber(32));
+                Console.WriteLine(randomNumber);
             }
+            Console.ReadLine();
+        }
+    }
 
+    public class RandomGenerator
+    {
+        public static byte[] GenerateRandomNumber(int length)
+        {
+            using (var randomNumberGenerator = new RNGCryptoServiceProvider())
+            {
+                var randomNumber = new byte[length];
+                randomNumberGenerator.GetBytes(randomNumber);
+                return randomNumber;
+            }
         }
     }
 }
-
