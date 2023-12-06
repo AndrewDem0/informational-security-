@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using System;
+using System.Linq;
 
 namespace _4._2
 {
@@ -11,11 +9,11 @@ namespace _4._2
     {
         static void Main(string[] args)
         {
-            string MD5Hash = "po1MVkAE7IjUUwu61XxgNg==";
+            string MD5Hash = "po1MVkAE7IjUUwu61XxgNg==";//розшифрований пароль 20192020
             byte[] targetHashBytes = Convert.FromBase64String(MD5Hash);
             Console.WriteLine("Хеш - " + MD5Hash);
 
-            for (int i = 0; i <= 10000000; i++)
+            for (int i = 0; i < 100000000; i++)
             {
                 string el = i.ToString();
 
@@ -25,10 +23,11 @@ namespace _4._2
 
                 if (currentHashBytes.SequenceEqual(targetHashBytes))
                 {
-                    Console.WriteLine("Ваш пароль : " + i );
+                    Console.WriteLine("Ваш пароль : " + i);
                     break;
                 }
             }
+            Console.ReadLine();
         }
         static byte[] ComputeHashMd5(byte[] dataForHash)
         {
