@@ -9,10 +9,10 @@ namespace _4._1
 {
     internal class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
-            string inputData = "Hello World!"; // Замініть це на ваші дані
-            string inputData1 = "Hello world!"; // Замініть це на ваші дані
+            string inputData = "Hello World!"; // початкові дані
+            string inputData1 = "Hello world!"; // початкові дані
 
             Console.WriteLine("MD5 Hash: " + Convert.ToBase64String(ComputeHashMd5(Encoding.UTF8.GetBytes(inputData))));
             Console.WriteLine("SHA-256 Hash: " + Convert.ToBase64String(ComputeHashSha256(Encoding.UTF8.GetBytes(inputData))));
