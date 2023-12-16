@@ -14,17 +14,14 @@ class Program
         Console.WriteLine("RSA Key Pair Generated...");
         Console.WriteLine();
 
-        // Example data for encryption
         string originalData = "Hello, RSA Encryption!";
         Console.WriteLine("Message to encrypt: " + originalData);
         Console.WriteLine();
 
-        // Encrypt and display the result
         byte[] encryptedData = EncryptData(Encoding.UTF8.GetBytes(originalData));
         Console.WriteLine("Encrypted Data: " + Convert.ToBase64String(encryptedData));
         Console.WriteLine();
 
-        // Decrypt and display the result
         byte[] decryptedData = DecryptData(encryptedData);
         string decryptedString = Encoding.UTF8.GetString(decryptedData);
         Console.WriteLine("Decrypted Data: " + decryptedString);
