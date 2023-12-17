@@ -8,9 +8,9 @@ class Program
     static void Main()
     {
         string publicKeyPath = "C:\\work prog\\інформаційна безпека\\C#\\Main\\7.2\\Demudenko_PublicKey.xml";
-        string chipherTextPath = "C:\\work prog\\інформаційна безпека\\C#\\Main\\7.2\\encrypteddata2.txt"; // 0-Anton 1-Max 2-Me
+        string chipherTextPath = "C:\\work prog\\інформаційна безпека\\C#\\Main\\7.2\\encrypteddata.txt"; // 0-Anton 1-Max 
         string friendPublicKeyPath = "C:\\work prog\\інформаційна безпека\\C#\\Main\\7.2\\Dashkovskiy_RSAPublicKey.xml"; //Dashkovskiy_RSAPublicKey
-        string friendsEncryptedMessagePath = "C:\\work prog\\інформаційна безпека\\C#\\Main\\7.2\\encryptedmessage.txt";
+        string friendsEncryptedMessagePath = "C:\\work prog\\інформаційна безпека\\C#\\Main\\7.2\\encryptedmessage.txt"; //0-Anton 1-Max 
 
 
         while (true)
