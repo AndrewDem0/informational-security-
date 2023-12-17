@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security;
-using System.Security.Principal;
-using System.Threading;
 
 public class User
 {
@@ -15,17 +13,177 @@ public class User
 public class Protector
 {
     private static Dictionary<string, User> _users = new Dictionary<string, User>();
+    private static User _loggedInUser = null;
 
-    public User Register(string userName, string password, string[] roles = null)
+    public void Run()
+    {
+        int choice;
+        do
+        {
+            ShowMainMenu();
+            choice = GetUserChoice();
+
+            switch (choice)
+            {
+                case 1:
+                    RegisterUser();
+                    break;
+                case 2:
+                    RegisterAdmin();
+                    break;
+                case 3:
+                    LogIn();
+                    break;
+                case 4:
+                    ShowAllUsers();
+                    break;
+                case 5:
+                    Environment.Exit(0);
+                    break;
+                default:
+                    Console.WriteLine("Невірний вибір. Будь ласка, виберіть знову.");
+                    break;
+            }
+
+        } while (choice != 5);
+    }
+
+    private void ShowMainMenu()
+    {
+        Console.WriteLine("Головне меню:");
+        Console.WriteLine("1. Додати User");
+        Console.WriteLine("2. Додати Admin");
+        Console.WriteLine("3. Ввійти");
+        Console.WriteLine("4. Показати всіх користувачів");
+        Console.WriteLine("5. Вийти з програми");
+    }
+
+    private void ShowLoggedInMenu()
+    {
+        Console.WriteLine("Меню після авторизації:");
+        Console.WriteLine("1. Доступно для User та Admin");
+        Console.WriteLine("2. Доступно лише для Admin");
+        Console.WriteLine("3. Вийти в головне меню");
+    }
+
+    private int GetUserChoice()
+    {
+        Console.Write("Введіть номер вашого вибору: ");
+        return int.Parse(Console.ReadLine());
+    }
+
+    private void RegisterUser()
+    {
+        Console.Write("Введіть логін для нового користувача: ");
+        string login = Console.ReadLine();
+        Console.Write("Введіть пароль для нового користувача: ");
+        string password = Console.ReadLine();
+
+        try
+        {
+            Register(login, password, new string[] { "User" });
+            Console.WriteLine("Користувач успішно доданий.");
+        }
+        catch (SecurityException ex)
+        {
+            Console.WriteLine($"{ex.GetType()}: {ex.Message}");
+        }
+    }
+
+    private void RegisterAdmin()
+    {
+        if (_users.Values.Count(user => Array.Exists(user.Roles, role => role == "Admin")) >= 1)
+        {
+            Console.WriteLine("Адміністратор вже існує. Тільки один адміністратор допускається.");
+            return;
+        }
+
+        Console.Write("Введіть логін для нового адміністратора: ");
+        string login = Console.ReadLine();
+        Console.Write("Введіть пароль для нового адміністратора: ");
+        string password = Console.ReadLine();
+
+        try
+        {
+            Register(login, password, new string[] { "Admin" });
+            Console.WriteLine("Адміністратор успішно доданий.");
+        }
+        catch (SecurityException ex)
+        {
+            Console.WriteLine($"{ex.GetType()}: {ex.Message}");
+        }
+    }
+
+    private void ShowAllUsers()
+    {
+        Console.WriteLine("Всі користувачі:");
+        foreach (var user in _users.Values)
+        {
+            Console.WriteLine($"Логін: {user.Login}, Роль: {string.Join(", ", user.Roles)}");
+        }
+    }
+
+    private void LogIn()
+    {
+        Console.Write("Введіть логін: ");
+        string login = Console.ReadLine();
+        Console.Write("Введіть пароль: ");
+        string password = Console.ReadLine();
+
+        try
+        {
+            LogIn(login, password);
+            Console.WriteLine("Авторизація пройшла успішно.");
+
+            int choice;
+            do
+            {
+                ShowLoggedInMenu();
+                choice = GetUserChoice();
+
+                switch (choice)
+                {
+                    case 1:
+                        Console.WriteLine("Цей функціонал доступний для User та Admin.");
+                        break;
+                    case 2:
+                        if (_loggedInUser.Roles != null && Array.Exists(_loggedInUser.Roles, role => role == "Admin"))
+                        {
+                            Console.WriteLine("Цей функціонал доступний лише для Admin.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("У вас недостатньо прав для цієї опції.");
+                        }
+                        break;
+                    case 3:
+                        Console.WriteLine("Вихід в головне меню та розавторизація.");
+                        _loggedInUser = null;
+                        break;
+                    default:
+                        Console.WriteLine("Невірний вибір. Будь ласка, виберіть знову.");
+                        break;
+                }
+
+            } while (choice != 3);
+
+        }
+        catch (SecurityException ex)
+        {
+            Console.WriteLine($"{ex.GetType()}: {ex.Message}");
+        }
+    }
+
+    private void Register(string userName, string password, string[] roles = null)
     {
         if (_users.Count >= 4)
         {
-            throw new SecurityException("Maximum number of users reached.");
+            throw new SecurityException("Досягнуто максимальну кількість користувачів.");
         }
 
         if (_users.ContainsKey(userName))
         {
-            throw new SecurityException("User with this name already registered.");
+            throw new SecurityException("Користувач з таким іменем вже зареєстрований.");
         }
 
         var salt = GenerateSalt();
@@ -36,66 +194,61 @@ public class Protector
             Login = userName,
             PasswordHash = passwordHash,
             Salt = salt,
-            Roles = roles ?? new string[0]
+            Roles = roles
         };
 
         _users.Add(userName, user);
-        return user;
     }
 
-    public bool CheckPassword(string userName, string password)
+    private bool CheckPassword(string userName, string password)
     {
         if (!_users.ContainsKey(userName))
         {
-            throw new SecurityException("User with this name is not registered.");
+            throw new SecurityException("Користувача з таким іменем не існує.");
         }
 
         var user = _users[userName];
-        var passwordHash = ComputeHash(password, user.Salt);
+        var hashedPassword = ComputeHash(password, user.Salt);
 
-        return user.PasswordHash == passwordHash;
+        return hashedPassword == user.PasswordHash;
     }
 
-    public void LogIn(string userName, string password)
+    private void LogIn(string userName, string password)
     {
-        if (CheckPassword(userName, password))
+        if (_loggedInUser != null)
         {
-            var identity = new GenericIdentity(userName, "OIBAuth");
-            var principal = new GenericPrincipal(identity, _users[userName].Roles);
-            Thread.CurrentPrincipal = principal;
+            throw new SecurityException("Ви вже авторизовані. Вийдіть перед авторизацією нового користувача.");
         }
+
+        if (!CheckPassword(userName, password))
+        {
+            throw new SecurityException("Невірний логін або пароль.");
+        }
+
+        var identity = new System.Security.Principal.GenericIdentity(userName, "OIBAuth");
+        var principal = new System.Security.Principal.GenericPrincipal(identity, _users[userName].Roles);
+
+        System.Threading.Thread.CurrentPrincipal = principal;
+        _loggedInUser = _users[userName];
     }
 
-    public void OnlyForAdminsFeature()
+    private string ComputeHash(string input, string salt)
     {
-        if (Thread.CurrentPrincipal == null)
+        using (var sha256 = System.Security.Cryptography.SHA256.Create())
         {
-            throw new SecurityException("Thread.CurrentPrincipal cannot be null.");
+            var saltedInput = input + salt;
+            var hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(saltedInput));
+            return Convert.ToBase64String(hash);
         }
-
-        if (!Thread.CurrentPrincipal.IsInRole("Admins"))
-        {
-            throw new SecurityException("User must be a member of Admins to access this feature.");
-        }
-
-        Console.WriteLine("You have access to this secure feature.");
     }
 
     private string GenerateSalt()
     {
-        byte[] saltBytes = new byte[16];
         using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider())
         {
+            var saltBytes = new byte[32]; // 32 bytes for a 256-bit key
             rng.GetBytes(saltBytes);
-        }
-        return Convert.ToBase64String(saltBytes);
-    }
-
-    private string ComputeHash(string password, string salt)
-    {
-        using (var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, Convert.FromBase64String(salt), 10000))
-        {
-            return Convert.ToBase64String(pbkdf2.GetBytes(32)); // 32 bytes for a 256-bit key
+            return Convert.ToBase64String(saltBytes);
         }
     }
 }
@@ -104,29 +257,7 @@ class Program
 {
     static void Main()
     {
-        try
-        {
-            Protector protector = new Protector();
-
-            // Register users
-            protector.Register("admin", "adminpassword", new string[] { "Admins" });
-            protector.Register("user1", "user1password", new string[] { "User" });
-            protector.Register("user2", "user2password", new string[] { "User" });
-            protector.Register("user3", "user3password", new string[] { "User" });
-
-            // Attempt login and access protected feature
-            protector.LogIn("admin", "adminpassword");
-            protector.OnlyForAdminsFeature();
-
-            protector.LogIn("user1", "user1password");
-            protector.OnlyForAdminsFeature(); // This should throw an exception
-
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"{ex.GetType()}: {ex.Message}");
-        }
-
-        Console.ReadLine();
+        Protector protector = new Protector();
+        protector.Run();
     }
 }
