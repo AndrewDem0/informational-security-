@@ -48,6 +48,7 @@ public class Protector
         } while (choice != 5);
     }
 
+    // Метод для виведення головного меню
     private void ShowMainMenu()
     {
         Console.WriteLine("Головне меню:");
@@ -58,6 +59,7 @@ public class Protector
         Console.WriteLine("5. Вийти з програми");
     }
 
+    // Метод для виведення меню після авторизації
     private void ShowLoggedInMenu()
     {
         Console.WriteLine("Меню після авторизації:");
@@ -66,12 +68,14 @@ public class Protector
         Console.WriteLine("3. Вийти в головне меню");
     }
 
+    // Метод для отримання вибору користувача
     private int GetUserChoice()
     {
         Console.Write("Введіть номер вашого вибору: ");
         return int.Parse(Console.ReadLine());
     }
 
+    // Метод для реєстрації звичайного користувача
     private void RegisterUser()
     {
         Console.Write("Введіть логін для нового користувача: ");
@@ -90,8 +94,10 @@ public class Protector
         }
     }
 
+    // Метод для реєстрації адміністратора
     private void RegisterAdmin()
     {
+        // Перевірка, чи існує вже адміністратор
         if (_users.Values.Count(user => Array.Exists(user.Roles, role => role == "Admin")) >= 1)
         {
             Console.WriteLine("Адміністратор вже існує. Тільки один адміністратор допускається.");
@@ -114,6 +120,7 @@ public class Protector
         }
     }
 
+    // Метод для виведення списку всіх користувачів
     private void ShowAllUsers()
     {
         Console.WriteLine("Всі користувачі:");
@@ -123,6 +130,7 @@ public class Protector
         }
     }
 
+    // Метод для авторизації користувача
     private void LogIn()
     {
         Console.Write("Введіть логін: ");
@@ -147,6 +155,7 @@ public class Protector
                         Console.WriteLine("Цей функціонал доступний для User та Admin.");
                         break;
                     case 2:
+                        // Перевірка, чи авторизований користувач є адміністратором
                         if (_loggedInUser.Roles != null && Array.Exists(_loggedInUser.Roles, role => role == "Admin"))
                         {
                             Console.WriteLine("Цей функціонал доступний лише для Admin.");
@@ -174,21 +183,26 @@ public class Protector
         }
     }
 
+    // Метод для реєстрації нового користувача
     private void Register(string userName, string password, string[] roles = null)
     {
+        // Перевірка, чи не досягнуто максимальну кількість користувачів
         if (_users.Count >= 4)
         {
             throw new SecurityException("Досягнуто максимальну кількість користувачів.");
         }
 
+        // Перевірка, чи не існує користувача з таким логіном
         if (_users.ContainsKey(userName))
         {
             throw new SecurityException("Користувач з таким іменем вже зареєстрований.");
         }
 
+        // Генерація солі та хешу пароля
         var salt = GenerateSalt();
         var passwordHash = ComputeHash(password, salt);
 
+        // Створення об'єкта користувача та додавання його до словника
         var user = new User
         {
             Login = userName,
@@ -200,31 +214,38 @@ public class Protector
         _users.Add(userName, user);
     }
 
+    // Метод для перевірки пароля
     private bool CheckPassword(string userName, string password)
     {
+        // Перевірка, чи існує користувач з таким логіном
         if (!_users.ContainsKey(userName))
         {
             throw new SecurityException("Користувача з таким іменем не існує.");
         }
 
+        // Отримання об'єкта користувача та порівняння хешу пароля
         var user = _users[userName];
         var hashedPassword = ComputeHash(password, user.Salt);
 
         return hashedPassword == user.PasswordHash;
     }
 
+    // Метод для авторизації користувача
     private void LogIn(string userName, string password)
     {
+        // Перевірка, чи користувач не вже авторизований
         if (_loggedInUser != null)
         {
             throw new SecurityException("Ви вже авторизовані. Вийдіть перед авторизацією нового користувача.");
         }
 
+        // Перевірка логіна та пароля
         if (!CheckPassword(userName, password))
         {
             throw new SecurityException("Невірний логін або пароль.");
         }
 
+        // Створення ідентичності та присвоєння її поточному потоку
         var identity = new System.Security.Principal.GenericIdentity(userName, "OIBAuth");
         var principal = new System.Security.Principal.GenericPrincipal(identity, _users[userName].Roles);
 
@@ -232,6 +253,7 @@ public class Protector
         _loggedInUser = _users[userName];
     }
 
+    // Метод для обчислення хешу пароля
     private string ComputeHash(string input, string salt)
     {
         using (var sha256 = System.Security.Cryptography.SHA256.Create())
@@ -242,6 +264,7 @@ public class Protector
         }
     }
 
+    // Метод для генерації солі
     private string GenerateSalt()
     {
         using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider())
@@ -253,11 +276,12 @@ public class Protector
     }
 }
 
+// Головний клас програми, який викликає логіку захисту та авторизації.
 class Program
 {
     static void Main()
     {
         Protector protector = new Protector();
-        protector.Run();
+        protector.Run(); // Запуск основного циклу програми Protector.
     }
 }
